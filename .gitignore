@@ -1,0 +1,5 @@
+node_modules
+coverage
+test/wallets
+web-server/data
+
