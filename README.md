@@ -86,8 +86,8 @@ node scripts/manufacturer.js setup
 - Manufacturer DID (did:web)
 - Manufacturer Local Server (web domain)
 - Client Wallet
-- Client DID (`did:key`)
-- Product DID (`did:web`)
+- Client DID (did:key)
+- Product DID (did:web)
 - Product Verifiable Credential(s)
 
 ### **Sequence Diagram**
