@@ -17,13 +17,11 @@ program.command("create-wallet").action(async () => {
   console.log("Client Wallet created for: ", wallet.did);
 });
 
-// --- Fetch Endpoints ---
 program.command("get-did-list").action(async () => {
   const res = await fetch(`${BASE_URL}/did`);
   console.log(await res.json());
 });
 
-// --- Fetch Product DID ---
 program
   .command("get-did")
   .requiredOption("--did <did>")
@@ -42,8 +40,6 @@ program
   .command("get-vc")
   .requiredOption("--vc <vc>")
   .action(async (options) => {
-    console.log("LOG: ", options.vc);
-
     const res = await fetch(options.vc);
     console.log(await res.json());
   });

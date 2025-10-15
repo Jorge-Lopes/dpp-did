@@ -41,7 +41,7 @@ function ensureCerts() {
 program.command("start-server").action(() => {
   console.log("Starting manufacturer server...");
 
-  ensureCerts()
+  ensureCerts();
 
   const server = spawn("node", ["./web-server/server.js"], {
     stdio: "inherit",
