@@ -6,7 +6,18 @@
   "type": "module",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "lint": "npx eslint ."
+    "prepare": "husky install"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "author": "",
   "license": "ISC",
@@ -23,8 +34,13 @@
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",
+    "husky": "^8.0.0",
     "jest": "^30.2.0",
+    "lint-staged": "^16.2.4",
+    "prettier": "^3.6.2",
     "sinon": "^21.0.0"
   }
 }
