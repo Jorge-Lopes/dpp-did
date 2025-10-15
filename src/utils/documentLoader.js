@@ -1,6 +1,6 @@
-import { defaultDocumentLoader } from "@digitalbazaar/vc";
-import { driver } from "@digitalbazaar/did-method-web";
-import pkg from "jsonld-signatures";
+import { defaultDocumentLoader } from '@digitalbazaar/vc';
+import { driver } from '@digitalbazaar/did-method-web';
+import pkg from 'jsonld-signatures';
 
 const { extendContextLoader } = pkg;
 const didWebDriver = driver();
@@ -22,7 +22,7 @@ export const getCustomDocumentLoader = async () => {
       };
     }
 
-    if (url.startsWith("did:web:")) {
+    if (url.startsWith('did:web:')) {
       const didDocument = await didWebDriver.get({ url });
       return {
         contextUrl: null,
