@@ -2,7 +2,9 @@
 
 import { suiteContext } from "@digitalbazaar/ed25519-signature-2020";
 import { Command } from "commander";
-import { spawn } from "child_process";
+import { spawn, execSync } from "child_process";
+import { existsSync, mkdirSync } from "fs";
+import path from "path";
 import { createManufacturerWallet } from "../src/wallet.js";
 import { getCustomDocumentLoader } from "../src/utils/documentLoader.js";
 
@@ -10,10 +12,38 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const program = new Command();
 
+function ensureCerts() {
+  const certDir = path.resolve("./web-server/certs");
+  const keyPath = path.join(certDir, "server.key");
+  const certPath = path.join(certDir, "server.cert");
+
+  if (!existsSync(certDir)) {
+    mkdirSync(certDir);
+  }
+
+  if (!existsSync(keyPath) || !existsSync(certPath)) {
+    console.log("🔐 Generating self-signed certificate for localhost...");
+
+    const cmd = `
+      openssl req -x509 -newkey rsa:4096 -sha256 -days 365 \
+      -nodes -keyout "${keyPath}" -out "${certPath}" \
+      -subj "/CN=localhost" \
+      -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+    `;
+
+    execSync(cmd, { stdio: "inherit", shell: true });
+    console.log("Certificates created");
+  } else {
+    console.log("Certificates already exist.");
+  }
+}
+
 program.command("start-server").action(() => {
   console.log("Starting manufacturer server...");
 
-  const server = spawn("node", ["../web-server/server.js"], {
+  ensureCerts()
+
+  const server = spawn("node", ["./web-server/server.js"], {
     stdio: "inherit",
     shell: true,
   });
@@ -29,7 +59,7 @@ program.command("setup").action(async () => {
 
   const serverOptions = {
     host: "localhost",
-    storagePath: "../web-server/data",
+    storagePath: "./web-server/data",
   };
 
   const wallet = await createManufacturerWallet(seed, serverOptions);
