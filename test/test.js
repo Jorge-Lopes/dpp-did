@@ -1,8 +1,6 @@
-import { suiteContext } from '@digitalbazaar/ed25519-signature-2020';
 import { createHash } from 'crypto';
-import { createManufacturerWallet, createClientWallet } from '../src/wallet.js';
-import { getCustomDocumentLoader } from '../src/utils/documentLoader.js';
-import { mockCredential } from './utils/mockData.js';
+import { createWallet } from '../src/wallet.js';
+import { getMockMaterialsCredential } from './utils/mockData.js';
 import { stubRequest } from './utils/stub.js';
 
 describe('happy path', () => {
@@ -22,38 +20,39 @@ describe('happy path', () => {
     const seed = new Uint8Array(32);
     seed.fill(0x01);
 
-    const serverOptions = {
+    const options = {
+      method: 'web',
       storagePath: 'test/wallets/manufacturer',
       host: 'example.com',
     };
 
-    manufacturerWallet = await createManufacturerWallet(seed, serverOptions);
+    manufacturerWallet = await createWallet(seed, options);
     expect(manufacturerWallet).toBeDefined();
   });
 
   test('manufacturer create new product', async () => {
     const product = await manufacturerWallet.createProduct();
+    productDocument = product.didDocument;
     expect(product).toBeDefined();
   });
 
   test('manufacturer issue new credential for product', async () => {
-    const [productDid, product] = manufacturerWallet.products.entries().next().value;
-    expect(product.didDocument.service).toStrictEqual([]);
+    stub = stubRequest({
+      url: 'https://example.com/products/0/did.json',
+      data: productDocument,
+    });
 
-    productDocument = product.didDocument;
+    const productDid = manufacturerWallet.productsRegistry[0];
+    const productDidDocument = await manufacturerWallet.getDocument(productDid);
+    expect(productDidDocument.service).toStrictEqual([]);
 
-    const name = 'materials';
-    const credential = mockCredential;
-    credential.issuer = manufacturerWallet.did;
-    credential.credentialSubject = { id: manufacturerWallet.did };
+    productDocument = productDidDocument;
 
-    const { documentLoader, addContext } = await getCustomDocumentLoader();
-    addContext(suiteContext.CONTEXT_URL, suiteContext.CONTEXT);
-
-    verifiableCredential = await manufacturerWallet.createCredential(productDid, credential, name, documentLoader);
+    const { credential, name } = getMockMaterialsCredential(manufacturerWallet.did);
+    verifiableCredential = await manufacturerWallet.createCredential(productDid, credential, name);
     expect(verifiableCredential).toBeDefined();
 
-    const updatedProduct = manufacturerWallet.products.get(productDid);
+    const updatedProductDocument = await manufacturerWallet.getDocument(productDid);
 
     const hash = createHash('sha256').update(JSON.stringify(verifiableCredential)).digest('hex');
     const expectedService = [
@@ -63,33 +62,49 @@ describe('happy path', () => {
         hash,
       },
     ];
-    expect(updatedProduct.didDocument.service).toStrictEqual(expectedService);
+    expect(updatedProductDocument.service).toStrictEqual(expectedService);
   });
 
   test('client create digital wallet', async () => {
     const seed = new Uint8Array(32);
     seed.fill(0x00);
 
-    clientWallet = await createClientWallet(seed);
+    const options = {
+      method: 'key',
+      storagePath: 'test/wallets/client',
+    };
+
+    clientWallet = await createWallet(seed, options);
     expect(clientWallet).toBeDefined();
   });
 
-  test('client get product DID document and buys product', async () => {
+  test('client get product DID Document', async () => {
     stub = stubRequest({
       url: 'https://example.com/products/0/did.json',
       data: productDocument,
     });
 
-    let document = await clientWallet.getDocument(productDocument.id);
+    //Client get product DID from data carrier
+    const scannedDID = 'did:web:example.com:products:0';
+
+    const document = await clientWallet.getDocument(scannedDID);
     expect(document).toBeDefined();
-    expect(document.controller).toBe(manufacturerWallet.did);
+    expect(document).toStrictEqual(productDocument);
+  });
 
-    // manufacturer set new product DID controller
-    const [, product] = manufacturerWallet.products.entries().next().value;
-    expect(document).toBe(product.didDocument);
-    product.setController(clientWallet.did);
+  test('client buys', async () => {
+    stub = stubRequest({
+      url: 'https://example.com/products/0/did.json',
+      data: productDocument,
+    });
 
-    document = await clientWallet.getDocument(productDocument.id);
-    expect(document.controller).toBe(clientWallet.did);
+    const productDid = manufacturerWallet.productsRegistry[0];
+
+    let document = await manufacturerWallet.getDocument(productDid);
+    expect(document.controller).toStrictEqual(manufacturerWallet.did);
+
+    await manufacturerWallet.transferProductOwnership(productDid, clientWallet.did);
+    document = await manufacturerWallet.getDocument(productDid);
+    expect(document.controller).toStrictEqual(clientWallet.did);
   });
 });

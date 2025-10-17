@@ -15,6 +15,7 @@ export const createDidKey = async (publicKey) => {
   return { did, didDocument };
 };
 
+// did:web
 export const createDidWeb = async (publicKey, host) => {
   const driver = new DidWebDriver();
 
@@ -36,7 +37,7 @@ export const createDidWeb = async (publicKey, host) => {
   return { did, didDocument, methodFor };
 };
 
-export const getDidDocument = async (url) => {
+export const resolveDidDocument = async (did) => {
   const driver = new DidWebDriver();
-  return await driver.get({ url: url });
+  return await driver.get({ did: did });
 };
