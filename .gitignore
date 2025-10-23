@@ -1,6 +1,3 @@
-node_modules
-coverage
-test/wallets
-web-server/data
-web-server/certs
-
+*/node_modules
+wallet/data
+wallet/test/data

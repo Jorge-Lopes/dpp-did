@@ -1,0 +1,32 @@
+services:
+  business_wallet:
+    build: ./wallet
+    ports:
+      - "7001:7001"
+    environment:
+      - ROLE=Business
+      - PORT=7001
+      - STORAGE_PATH=/app/data/business
+      - DOMAIN=business_server:7003
+    volumes:
+      - ./wallet/data:/app/data
+
+  client_wallet:
+    build: ./wallet
+    ports:
+      - "7002:7002"
+    environment:
+      - ROLE=Client
+      - PORT=7002
+      - STORAGE_PATH=/app/data/client
+    volumes:
+      - ./wallet/data:/app/data
+
+  business_server:
+    build: ./business-server
+    ports:
+      - "7003:7003"
+    environment:
+      - PORT=7003
+    volumes:
+      - ./wallet/data:/app/data

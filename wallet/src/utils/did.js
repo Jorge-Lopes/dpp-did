@@ -1,10 +1,10 @@
-import { Ed25519VerificationKey2020 } from '@digitalbazaar/ed25519-verification-key-2020';
-import { driver as DidKeyDriver } from '@digitalbazaar/did-method-key';
-import { driver as DidWebDriver } from '@digitalbazaar/did-method-web';
+import { Ed25519VerificationKey2020 } from "@digitalbazaar/ed25519-verification-key-2020";
+import { driver as DidKeyDriver } from "@digitalbazaar/did-method-key";
+import { driver as DidWebDriver } from "@digitalbazaar/did-method-web";
 
 export const createDidKey = async (publicKey) => {
   const driver = new DidKeyDriver();
-  const did = 'did:key:' + publicKey;
+  const did = "did:key:" + publicKey;
 
   const multibaseMultikeyHeader = did.slice(8, 12);
   const fromMultibase = Ed25519VerificationKey2020.from;
@@ -15,8 +15,7 @@ export const createDidKey = async (publicKey) => {
   return { did, didDocument };
 };
 
-// did:web
-export const createDidWeb = async (publicKey, host) => {
+export const createDidWeb = async (publicKey, domain) => {
   const driver = new DidWebDriver();
 
   const multibaseMultikeyHeader = publicKey.slice(0, 4);
@@ -28,7 +27,7 @@ export const createDidWeb = async (publicKey, host) => {
   });
 
   const { didDocument, methodFor } = await driver.fromKeyPair({
-    url: 'https://' + host,
+    url: "https://" + domain,
     verificationKeyPair: keyPairForVerification,
   });
 
